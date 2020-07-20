@@ -1,3 +1,10 @@
+// loading env
+const activeEnv = process.env.NODE_ENV || 'development'
+console.log(`Using environment config: '${activeEnv}'`)
+require("dotenv").config({
+  path: `.env.${activeEnv}`,
+})
+
 let siteConfig;
 let wordpressConfig;
 
@@ -10,8 +17,10 @@ try {
 
 console.log(typeof process.env.WP_HOSTING_WPCOM);
 const hostingWPCOM = process.env.WP_HOSTING_WPCOM &&  process.env.WP_HOSTING_WPCOM === "true" ? true: false; 
+
 if (process.env.WP_BASE_URL) {
   wordpressConfig.baseUrl = process.env.WP_BASE_URL; 
+  wordpressConfig.protocol = process.env.WP_PROTOCOL ? process.env.WP_PROTOCOL : "https";
   if (hostingWPCOM) {
     wordpressConfig.hostingWPCOM = true;
     wordpressConfig.auth = {};
@@ -58,14 +67,64 @@ if (process.env.GA) {
   });
 }
 
-gatsbyPlugins.push({
-  resolve: 'gatsby-plugin-robots-txt',
-  options: {
-    host: siteConfig.siteUrl,
-    sitemap: `${siteConfig.siteUrl}/sitemap.xml`,
-    policy: [{ userAgent: '*', disallow: ['/'] }]
-  }
-})
+if (process.env.GATSBY_MIXPANEL_TOKEN) {
+  gatsbyPlugins.unshift({
+    resolve: `gatsby-plugin-mixpanel`,
+    options: {
+      apiToken: process.env.GATSBY_MIXPANEL_TOKEN,
+      enableOnDevMode: true,
+      pageViews: 'all'
+    },
+  });
+}
+
+if (process.env.GATSBY_HOTJAR_ID) {
+  gatsbyPlugins.unshift({
+    resolve: `gatsby-plugin-hotjar`,
+    options: {
+      id: process.env.GATSBY_HOTJAR_ID,
+      sv: 6
+    }
+  });
+}
+
+if (process.env.GATSBY_GTAG_MANAGER_ID) {
+  gatsbyPlugins.unshift({
+    resolve: `gatsby-plugin-google-tagmanager`,
+    options: {
+      id: process.env.GATSBY_GTAG_MANAGER_ID,
+      includeInDevelopment: true
+    },
+  });
+}
+
+if (process.env.GATSBY_TAWK_ID) {
+  gatsbyPlugins.unshift({
+    resolve: `gatsby-plugin-tawk`,
+    options: {
+      tawkId: process.env.GATSBY_TAWK_ID,
+    }
+  });
+}
+
+if (process.env.GATSBY_CRISP_ID) {
+  gatsbyPlugins.unshift({
+    resolve: `gatsby-plugin-crisp-chat`,
+    options: {
+      websiteId: process.env.GATSBY_CRISP_ID,
+      enableDuringDevelop: true
+    }
+  });
+}
+
+if (process.env.GATSBY_OLARK_ID) {
+  gatsbyPlugins.unshift({
+    resolve: `gatsby-plugin-olark`,
+    options: {
+      olarkSiteID: process.env.GATSBY_OLARK_ID,
+    }
+  });
+}
 
 module.exports = {
   plugins: gatsbyPlugins,
